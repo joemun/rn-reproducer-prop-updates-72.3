@@ -1,13 +1,6 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- */
-
 import React from 'react';
-import type {PropsWithChildren} from 'react';
 import {
+  Button,
   SafeAreaView,
   ScrollView,
   StatusBar,
@@ -17,50 +10,38 @@ import {
   View,
 } from 'react-native';
 
-import {
-  Colors,
-  DebugInstructions,
-  Header,
-  LearnMoreLinks,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
+import {Colors} from 'react-native/Libraries/NewAppScreen';
 
-type SectionProps = PropsWithChildren<{
-  title: string;
-}>;
-
-function Section({children, title}: SectionProps): React.JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
-  return (
-    <View style={styles.sectionContainer}>
-      <Text
-        style={[
-          styles.sectionTitle,
-          {
-            color: isDarkMode ? Colors.white : Colors.black,
-          },
-        ]}>
-        {title}
-      </Text>
-      <Text
-        style={[
-          styles.sectionDescription,
-          {
-            color: isDarkMode ? Colors.light : Colors.dark,
-          },
-        ]}>
-        {children}
-      </Text>
-    </View>
-  );
-}
+import RTNCenteredText from 'rtn-centered-text/js/RTNCenteredTextNativeComponent';
 
 function App(): React.JSX.Element {
   const isDarkMode = useColorScheme() === 'dark';
+  const [logs, setLogs] = React.useState<string[]>([]);
+  const scrollViewRef = React.useRef<ScrollView | null>(null);
+  const [centeredText, setCenteredText] = React.useState('Hello!');
+  const [otherText, setOtherText] = React.useState('Other');
 
   const backgroundStyle = {
     backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
   };
+
+  function handleUpdateProp1() {
+    setLogs([...logs, 'Calling setCenteredText()...']);
+    setCenteredText(Math.random().toString());
+  }
+
+  function handleUpdateProp2() {
+    setLogs([...logs, 'Calling setOtherText()...']);
+    setOtherText(Math.random().toString());
+  }
+
+  function handleClearLogs() {
+    setLogs([]);
+  }
+
+  function handleTestDirectEvent(event: {nativeEvent: {message: string}}) {
+    setLogs([...logs, event.nativeEvent?.message]);
+  }
 
   return (
     <SafeAreaView style={backgroundStyle}>
@@ -68,28 +49,32 @@ function App(): React.JSX.Element {
         barStyle={isDarkMode ? 'light-content' : 'dark-content'}
         backgroundColor={backgroundStyle.backgroundColor}
       />
+      <View
+        style={{
+          backgroundColor: isDarkMode ? Colors.black : Colors.white,
+        }}>
+        <RTNCenteredText
+          text={centeredText}
+          other={otherText}
+          onTestDirectEvent={handleTestDirectEvent}
+          // onTestBubblingEvent={handleTestBubblingEvent}
+          style={styles.centeredTextComponent}
+        />
+        <Button title="Update prop 1" onPress={handleUpdateProp1} />
+        <Button title="Update prop 2" onPress={handleUpdateProp2} />
+        <Button title="Clear logs" onPress={handleClearLogs} />
+      </View>
       <ScrollView
+        ref={scrollViewRef}
         contentInsetAdjustmentBehavior="automatic"
-        style={backgroundStyle}>
-        <Header />
-        <View
-          style={{
-            backgroundColor: isDarkMode ? Colors.black : Colors.white,
-          }}>
-          <Section title="Step One">
-            Edit <Text style={styles.highlight}>App.tsx</Text> to change this
-            screen and then come back to see your edits.
-          </Section>
-          <Section title="See Your Changes">
-            <ReloadInstructions />
-          </Section>
-          <Section title="Debug">
-            <DebugInstructions />
-          </Section>
-          <Section title="Learn More">
-            Read the docs to discover what to do next:
-          </Section>
-          <LearnMoreLinks />
+        onContentSizeChange={() =>
+          scrollViewRef.current?.scrollToEnd({animated: true})
+        }
+        style={styles.logs}>
+        <View>
+          {logs.map((log, index) => (
+            <Text key={index}>{log}</Text>
+          ))}
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -97,21 +82,15 @@ function App(): React.JSX.Element {
 }
 
 const styles = StyleSheet.create({
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
+  centeredTextComponent: {
+    height: 20,
+    marginTop: 16,
+    width: '100%',
   },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: '600',
-  },
-  sectionDescription: {
-    marginTop: 8,
-    fontSize: 18,
-    fontWeight: '400',
-  },
-  highlight: {
-    fontWeight: '700',
+  logs: {
+    height: '100%',
+    marginTop: 16,
+    padding: 16,
   },
 });
 
